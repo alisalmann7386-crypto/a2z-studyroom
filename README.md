@@ -1,4 +1,116 @@
-# A2Z Studyroom — Striver DSA lecture RAG
+# A2Z Studyroom
+
+**Find the lecture. Jump to the timestamp. Revise the topic.**
+
+### [Open the live demo →](https://a2z-studyroom.onrender.com/)
+
+[Student guide](docs/USER_GUIDE.md) · [Run locally](#start-locally-without-keys) · [Deployment](docs/DEPLOYMENT.md) · [Prepared lecture bundle](https://github.com/alisalmann7386-crypto/a2z-studyroom/releases/download/a2z-data-v1/A2Z_314_Lectures.zip)
+
+> “Yeh topic padha toh tha… par kaunse lecture mein?”
+
+A2Z Studyroom helps you search [Striver’s A2Z DSA playlist](https://www.youtube.com/playlist?list=PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz), find the relevant explanation, and revise it with linked lecture sources.
+
+## Why I built it
+
+While solving DSA problems, I sometimes wanted to revisit an explanation I had already watched. I remembered the topic, but finding the right video and the right part of a long lecture took time.
+
+That became the idea behind A2Z Studyroom: ask a question in your own words, find where the topic is taught, and continue studying from there.
+
+**Example:** ask **“Where is partition equal subset sum taught?”** The app looks for relevant lecture captions and shows the lecture, its playlist position, and a timestamp when caption evidence is available.
+
+## Try the website in a minute
+
+1. Open the **[live demo](https://a2z-studyroom.onrender.com/)**.
+2. Choose **Find lecture** and ask **“Where is binary search taught?”**
+3. Open the **Best match**, inspect its caption excerpt, or use **Watch** to jump into the lecture.
+4. Choose **Quick revision** and ask **“Summarise it.”**
+5. Use **Save notes** to keep the notes, then **Quiz me / Practice** to test your recall.
+
+Choose **English**, **Hinglish**, or **Hindi** in the answer-language menu. Generated explanations and translations depend on the server’s model configuration; the caption search can work without an LLM.
+
+> Topic yaad hai, video yaad nahi? Topic poochho, source kholo, aur wahi se revise karo.
+
+## What a result tells you
+
+| On the screen | What it means |
+|---|---|
+| **Playlist #196** | The video’s position in the A2Z playlist |
+| **DP 15** | The creator’s series label; it is a different numbering system |
+| **Caption timestamp** | The matching moment in an indexed lecture transcript |
+| **Watch / YouTube link** | Opens playback near that moment, sometimes a few seconds earlier for context |
+| **Short recap or explanation** | Retrieved source text, a clearly labeled title overview, or a generated answer |
+| **Source buttons such as [1]** | Open the supporting caption excerpt so you can check the answer |
+
+This example numbering illustrates how to read a result. Related lectures may also appear; start with **Best match** and check the source.
+
+## Pick the tool you need
+
+| Tool | When to use it | Example question |
+|---|---|---|
+| **Find lecture** | Locate a topic and its available timestamp | Where is binary search taught? |
+| **Explain** | Understand an idea with an example | Explain binary search with a small example. |
+| **Quick revision** | Create structured study notes | Create revision notes for partition equal subset sum. |
+| **Hint only** | Get a nudge before trying the problem yourself | Binary search. |
+| **Compare** | Study two approaches together | Compare iterative and recursive binary search. |
+| **Complexity** | Ask about supported time and space costs | What are the time and space costs of binary search? |
+| **Code** | Request an implementation from the retrieved evidence | Binary search. Keep the implementation short. |
+
+**Code** supports Python, C++, and Java. **Quick revision** offers **Concise notes** and **Exam-ready notes**. Explain, notes, hints, comparisons, complexity explanations, and derived code require a configured model for generated output; otherwise the app shows available source evidence.
+
+## How it works, simply
+
+**RAG** means *retrieval-augmented generation*: find relevant lecture passages first, then use them to support an answer. The default search uses **BM25**, which ranks matching text in a prepared **SQLite** index.
+
+```mermaid
+flowchart TD
+    Q["Your DSA question"] --> R["Search the prepared lecture index"]
+    R --> E{"Relevant captions found?"}
+    E -->|Yes| M{"Generation requested and enabled?"}
+    M -->|Yes| G["Create an answer and check its source references"]
+    M -->|No| X["Show retrieved caption evidence"]
+    G -->|Valid references| V["Show lecture, timestamp and source links"]
+    G -->|Generation or validation fails| X
+    X --> V
+    E -->|No| C{"Lecture title matches?"}
+    C -->|Yes| T["Show the video link without a verified timestamp"]
+    C -->|No| N["Explain that supporting evidence was not found"]
+```
+
+Caption text and timestamps are prepared ahead of time. **Students do not download videos or rebuild the index when asking questions.** Playing a linked lecture still uses YouTube.
+
+If generation fails or its references are invalid, the app returns the retrieved evidence with a message. Source checks reduce unsupported output; they do not prove every explanation or code example is correct.
+
+## Keep studying after the first answer
+
+- **Follow up:** “Summarise it”, “Explain step 3”, or “Show the recursive version”. The app uses the recent topic and selected lecture where it can resolve the reference.
+- **Save notes:** use **My notes** for categories, annotations, downloads, and lecture references.
+- **Practise:** write an attempt before revealing a recall card, then rate it to schedule another review.
+- **Track progress:** bookmark lectures or mark them **Completed** / **Revise again**.
+- **Keep a backup:** export and import study data through **Settings → Study backup**.
+
+Follow-up context is limited, so name the topic again when a question is ambiguous. Notes and progress stay in the current browser. Optional conversation history is off by default, and there is no automatic account sync.
+
+**[Read the student guide →](docs/USER_GUIDE.md)** for a complete example, source reading, practice, backup, and common questions.
+
+## Lecture coverage
+
+| Prepared-data checkpoint | Count |
+|---|---:|
+| Accessible videos in the verified catalog | 315 |
+| Lectures with indexed captions | 314 |
+| Timed transcript windows | 6,933 |
+| Caption coverage | 99.7% |
+
+These are the **16 October 2026 checkpoint** figures, not a live counter. Playlist **#113, Ceil in BST**, has a searchable video link but no indexed captions in that bundle. See [the coverage report](docs/LECTURE_COVERAGE.json), [current server statistics](https://a2z-studyroom.onrender.com/api/stats), or [download the prepared bundle](https://github.com/alisalmann7386-crypto/a2z-studyroom/releases/download/a2z-data-v1/A2Z_314_Lectures.zip).
+
+The repository includes metadata and original sample notes. The prepared transcript index is distributed separately. Starting without that index opens the sample-notes demo, not the complete lecture corpus.
+
+## Build and run it yourself
+
+The expandable section below keeps the complete setup, ingestion, deployment, API, and validation reference. Start with **[local setup](#start-locally-without-keys)**, **[training/indexing](docs/TRAINING.md)**, or **[deployment](docs/DEPLOYMENT.md)**.
+
+<details>
+<summary><strong>Open developer setup and detailed technical reference</strong></summary>
 
 A deployable study application for [Striver’s A2Z DSA playlist](https://www.youtube.com/playlist?list=PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz). Ask a question, retrieve transcript segments, and open the lecture near the explanation. Generated answers are optional; retrieval works without an LLM key.
 
@@ -206,3 +318,5 @@ The bundled evaluation set is for demo notes. Replace expected titles with real 
 ## Reference analysis
 
 Designed after reviewing [week3/ytscraper in padho_with_pratyush_Ai_Enginner](https://github.com/perryvegehan/padho_with_pratyush_Ai_Enginner/tree/main/week3/ytscraper). This is a fresh implementation of its timestamp-aware lecture RAG workflow. Reference source and transcripts were not copied. Read **[docs/REFERENCE_ANALYSIS.md](docs/REFERENCE_ANALYSIS.md)**.
+
+</details>
